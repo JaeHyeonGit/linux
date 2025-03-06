@@ -1,0 +1,123 @@
+#!/bin/bash
+set -e
+
+# 백업 sshd 설정 파일
+SSHD_CONFIG_BACKUP="/etc/ssh/sshd_config_$(date +%Y%m%d)"
+if [ ! -f "$SSHD_CONFIG_BACKUP" ]; then
+    cp /etc/ssh/sshd_config "$SSHD_CONFIG_BACKUP"
+    echo "## 백업된 sshd_config: $SSHD_CONFIG_BACKUP"
+else
+    echo "## 백업 파일이 이미 존재합니다: $SSHD_CONFIG_BACKUP"
+fi
+
+# 필요한 패키지 설치
+echo "Updating package list..."
+apt update
+
+# 필수 패키지가 이미 설치되어 있는지 확인
+for package in build-essential zlib1g-dev libssl-dev libpam0g-dev wget tar; do
+    dpkg -l | grep -qw "$package" || apt install -y "$package"
+done
+echo "## 필요한 패키지 설치 완료"
+
+# OpenSSH 업그레이드
+OPENSSH_VERSION="openssh-9.8p1"
+cd /usr/local/src
+if [ -d "$OPENSSH_VERSION" ]; then
+    echo "## $OPENSSH_VERSION 디렉토리가 이미 존재합니다. 삭제 후 다시 다운로드하지 않습니다."
+else
+    echo "다운로드 및 압축 해제 중..."
+    wget -c --no-check-certificate "https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/$OPENSSH_VERSION.tar.gz"
+    tar xvfz "$OPENSSH_VERSION.tar.gz" > /dev/null
+fi
+cd "$OPENSSH_VERSION"
+
+# 백업 Service 파일
+SSHD_SERVICE_BACKUP="/lib/systemd/system/ssh.service_$(date +%Y%m%d)"
+if [ ! -f "$SSHD_SERVICE_BACKUP" ]; then
+    cp /lib/systemd/system/ssh.service "$SSHD_SERVICE_BACKUP"
+    echo "## 백업된 sshd_config: $SSHD_SERVICE_BACKUP"
+else
+    echo "## 백업 파일이 이미 존재합니다: $SSHD_SERVICE_BACKUP"
+fi
+
+
+# 기존 OpenSSH 제거
+echo "기존 OpenSSH 서버 제거 중..."
+apt remove -y openssh-server
+
+# OpenSSH 소스 컴파일 및 설치
+echo "OpenSSH 소스 컴파일 중..."
+./configure --prefix=/usr --sysconfdir=/etc/ssh --with-pam --with-ssl-dir=/usr
+chmod go-r /etc/ssh/*
+
+echo "Make 및 설치 중..."
+make
+make install
+install -v -m755 contrib/ssh-copy-id /usr/bin
+install -v -m644 contrib/ssh-copy-id.1 /usr/share/man/man1
+install -v -m755 -d /usr/share/doc/$OPENSSH_VERSION
+install -v -m644 INSTALL LICENCE OVERVIEW README* /usr/share/doc/$OPENSSH_VERSION
+
+echo "## OpenSSH 업그레이드 완료"
+
+# PAM 및 systemd 설정 복사
+echo "PAM 설정 파일 및 systemd 서비스 복사 중..."
+if [ ! -f /etc/pam.d/sshd ]; then
+    cp ./contrib/sshd.pam.generic /etc/pam.d/sshd
+    echo "## PAM 설정 복사 완료"
+else
+    echo "## PAM 설정 파일이 이미 존재합니다."
+fi
+
+################### 필요 없을것 같아 주석 처리 진행 #################################
+#if [ ! -f /etc/systemd/system/sshd.service ]; then
+#    cp -p contrib/systemd/sshd.service /etc/systemd/system/sshd.service
+#    chmod +x /etc/systemd/system/sshd.service
+#    echo "## systemd 서비스 파일 복사 완료"
+#else
+#    echo "## systemd 서비스 파일이 이미 존재합니다."
+#fi
+###########################################################################
+
+# sshd_config 수정
+echo "sshd_config 수정 중..."
+if ! grep -q "PermitRootLogin no" /etc/ssh/sshd_config; then
+    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
+	sed -i '/^#*Port 22/i Port 4210' /etc/ssh/sshd_config
+    echo "## sshd_config에 PermitRootLogin no 및 Port 4210 추가 완료"
+else
+    echo "## sshd_config에 이미 PermitRootLogin no 및 Port 4210이 설정되어 있습니다."
+fi
+
+# ssh.service 복원
+echo "ssh.service 파일 복원 중..."
+cp "$SSHD_SERVICE_BACKUP" /lib/systemd/system/ssh.service
+echo "## sshd_config 파일이 복원되었습니다."
+
+# apt 캐시 정리
+echo "APT 캐시 정리 중..."
+apt autoremove -y
+apt clean
+
+# sshd 서비스 활성화 및 재시작
+echo "systemd 다시 로드 및 sshd 서비스 활성화..."
+systemctl unmask ssh
+systemctl daemon-reload
+systemctl disable ssh
+systemctl enable ssh
+systemctl restart sshd
+echo "## sshd 서비스 설정 완료"
+
+# 설치 확인
+echo "+++++++++++++++++++++++" 
+echo "OpenSSH 버전 확인:"
+ssh -V
+echo "+++++++++++++++++++++++"
+
+# sshd_config 복원
+#echo "sshd_config 파일 복원 중..."
+#cp "$SSHD_CONFIG_BACKUP" /etc/ssh/sshd_config
+#echo "## sshd_config 파일이 복원되었습니다."
+
+echo "OpenSSH 업그레이드 및 설정이 완료되었습니다."
