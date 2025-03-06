@@ -1,0 +1,339 @@
+#!/bin/bash
+
+echo
+echo
+echo
+echo "script start !!"
+echo
+echo
+echo
+
+mkdir /cloit
+logPath=/cloit/
+
+echo
+
+logFile=log.txt
+backupDate=$(date "+%Y%m%d_%H%M%S")
+INS=$logPath$backupDate"_"$logFile
+OS=`cat /etc/*release |grep "HOME_URL"`
+
+STATIC_ROUTE=$(ls -al /etc/sysconfig/network-scripts/route* 2>/dev/null | wc -l)
+DEFAULT_GATEWAY=$(ip route show default | awk '/default/ {print $3}')
+
+case $OS in
+*centos*|*CentOS*)
+# lsof -p [PID]
+ echo 1. uptime > $INS
+            uptime >> $INS
+
+            echo >> $INS
+
+            echo 2. date >> $INS
+            date >> $INS
+
+            echo >> $INS
+
+            echo 3. hostname >> $INS
+            hostname >> $INS
+
+            echo >> $INS
+
+            echo 4. cat /etc/hosts >> $INS
+            cat /etc/hosts >> $INS
+
+            echo >> $INS
+
+            echo 5. uname -a >> $INS
+            uname -a >> $INS
+
+            echo >> $INS
+
+            echo 6. cat /etc/passwd >> $INS
+            cat /etc/passwd >> $INS
+
+            echo >> $INS
+
+            echo 7. systemctl >> $INS
+            systemctl >> $INS
+
+            echo >> $INS
+
+            echo 8. ls -al /etc/systemd/system/multi-user.target.wants >> $INS
+            ls -al /etc/systemd/system/multi-user.target.wants >> $INS
+
+            echo >> $INS
+
+            echo 9. ls -al /etc/rc3.d/S* >> $INS
+            ls -al /etc/rc3.d/S* >>$INS
+
+            echo >> $INS
+            echo >> $INS
+
+            echo 10. cat /etc/rc.local >> $INS
+            cat /etc/rc.local >> $INS
+
+            echo >> $INS
+
+            echo 11. df -Th >> $INS
+            df -Th >> $INS
+
+            echo >> $INS
+
+            echo 12. cat /etc/fstab >> $INS
+            cat /etc/fstab >> $INS
+
+            echo >> $INS
+
+            echo 13. ip link >> $INS
+            ip link >> $INS
+
+            echo >> $INS
+
+            echo 14. ifconfig -a >> $INS
+            ifconfig -a >> $INS
+
+            echo >> $INS
+
+            echo 15. route -n >>$INS
+            route -n >> $INS
+
+            echo >> $INS
+
+            echo 16. ls -al /etc/sysconfig/network-scripts/route-* >> $INS
+            if [ $STATIC_ROUTE = "0" ]
+            then
+                    echo "서버 재시작 시 아래와 같은 라우팅 정보가 없으면 자동 추가되지 않아 파일 확인 필요"
+                    echo "/etc/sysconfig/network-scripts/route* 파일이 없습니다."
+            else
+                    ls -al /etc/sysconfig/network-scripts/route* >> $INS
+            fi
+
+            echo >> $INS
+
+            echo 17. ls -al /etc/sysconfig/network-scripts/ifcfg-* >> $INS
+            ls -al /etc/sysconfig/network-scripts/ifcfg-* >> $INS
+
+            echo >> $INS
+
+            echo 18. ping -c 1 [DEFAULT_GATEWAY] >> $INS
+            ping -c 1 $DEFAULT_GATEWAY >> $INS
+
+            echo >> $INS
+
+            echo 19. netstat -nltp >> $INS
+            netstat -nlpt >> $INS
+
+            echo >> $INS
+
+            echo 20. ps aux >> $INS
+            ps aux >> $INS
+
+            echo >> $INS
+
+            echo 21. netstat -na >> $INS
+            netstat -na >> $INS
+
+            echo >> $INS
+
+            # systemctl 와 비슷하여 주석처리
+            #echo 21. ls -al /etc/systemd/system >> $INS
+            #ls -al /etc/systemd/system >> $INS
+
+            echo 22. yum list installed >> $INS
+            yum list installed 2>/dev/null >> $INS
+
+            echo >> $INS
+
+            echo 23. yum history list >> $INS
+            yum history list 2>/dev/null >> $INS
+
+            echo >> $INS
+
+            echo 24. rpm -qa >> $INS
+            rpm -qa >> $INS
+
+            echo >> $INS
+
+            echo 25. cat /etc/login.defs >> $INS
+            cat /etc/login.defs >> $INS
+
+            echo >> $INS
+
+            echo 26. cat /etc/pam.d/system-auth >> $INS
+            cat /etc/pam.d/system-auth >> $INS
+
+            echo >> $INS
+
+            echo 27. cat /etc/pam.d/password-auth >> $INS
+            cat /etc/pam.d/password-auth >> $INS
+
+            echo >> $INS
+            echo "centos script finished :)"
+            echo "=====================================================================" >> $INS
+            echo "===============================The End===============================" >> $INS
+            echo "=====================================================================" >> $INS
+            ;;
+
+
+    *ubuntu*|*Ubuntu*)
+            echo 1. uptime > $INS
+            uptime >> $INS
+
+            echo >> $INS
+
+            echo 2. date >> $INS
+            date >> $INS
+
+            echo >> $INS
+
+            echo 3. hostname >> $INS
+            hostname >> $INS
+
+            echo >> $INS
+
+            echo 4. cat /etc/hosts >> $INS
+            cat /etc/hosts >> $INS
+
+            echo >> $INS
+
+            echo 5. uname -a >> $INS
+            uname -a >> $INS
+
+            echo >> $INS
+
+            echo 6. cat /etc/passwd >> $INS
+            cat /etc/passwd >> $INS
+
+            echo >> $INS
+
+            #echo 7. ps aux >> $INS
+            #ps aux >> $INS
+
+            echo 7. systemctl >> $INS
+            systemctl >> $INS
+
+            echo >> $INS
+
+            echo 8. ls -al /etc/systemd/system/multi-user.target.wants >> $INS
+            ls -al /etc/systemd/system/multi-user.target.wants >> $INS
+
+            echo >> $INS
+
+            echo 9. ls -al /etc/rc3.d/S* >> $INS
+            ls -al /etc/rc3.d/S* >>$INS
+
+            echo >> $INS
+            echo >> $INS
+
+            echo 10. cat /etc/rc.local >> $INS
+            cat /etc/rc.local >> $INS
+
+            echo >> $INS
+
+            echo 11. df -Th >> $INS
+            df -Th >> $INS
+
+            echo >> $INS
+
+            echo 12. cat /etc/fstab >> $INS
+            cat /etc/fstab >> $INS
+
+            echo >> $INS
+
+            echo 13. ip link >> $INS
+            ip link >> $INS
+
+            echo >> $INS
+
+            echo 14. ifconfig -a >> $INS
+            ifconfig -a >> $INS
+
+            echo >> $INS
+
+            echo 15. route -n >>$INS
+            route -n >> $INS
+
+            echo >> $INS
+
+            echo 16. netstat -rn >> $INS
+            netstat -rn >> $INS
+
+            echo >> $INS
+
+            echo 17. cat /etc/network/interfaces >> $INS
+            cat /etc/network/interfaces >> $INS
+
+            echo >> $INS
+
+            echo 18. ping -c 1 [DEFAULT_GATEWAY] >> $INS
+            ping -c 1 $DEFAULT_GATEWAY >> $INS
+
+            echo >> $INS
+
+            echo 19. netstat -nltp >> $INS
+            netstat -nlpt >> $INS
+
+            echo >> $INS
+
+            echo 20. ps aux >> $INS
+            ps aux >> $INS
+
+            echo >> $INS
+
+            echo 21. netstat -na >> $INS
+            netstat -na >> $INS
+
+            echo >> $INS
+
+            # systemctl 와 비슷하여 주석처리
+            #echo 21. ls -al /etc/systemd/system >> $INS
+            #ls -al /etc/systemd/system >> $INS
+
+            echo 22. yum list installed >> $INS
+            yum list installed 2>/dev/null >> $INS
+
+            echo >> $INS
+
+            echo 23. cat /var/log/apt/history.log >> $INS
+            # cat /var/log/apt/history.log 2>/dev/null >> $INS
+            cat /var/log/apt/history.log >> $INS
+
+            echo >> $INS
+
+            echo 24. apt list --installed >> $INS
+            apt list --installed 2>/dev/null >> $INS
+
+            echo >> $INS
+
+            echo 25. cat /etc/login.defs >> $INS
+            cat /etc/login.defs >> $INS
+
+            echo >> $INS
+
+            echo 26. cat /etc/pam.d/common-auth >> $INS
+            cat /etc/pam.d/common-auth >> $INS
+
+
+            echo >> $INS
+            ;;
+
+    *)
+            echo "OS를다시 z확인해주세요.(CentOS 또는 Ubuntu)"
+            ;;
+
+esac
+
+echo
+echo
+echo
+echo "====================================================================="
+echo "===============================The End==============================="
+echo "====================================================================="
+echo
+echo
+echo "*****  script 실행 결과 파일의 저장 위치는 '/cloit' 입니다:)  *****"
+echo
+echo
+echo
+echo
